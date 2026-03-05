@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Velocity Burst | AntiGravity Edition</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <div class="canvas-wrapper" id="shake-target">
+            <canvas id="tetris-canvas"></canvas>
+        </div>
+
+        <div class="ui-panel">
+            <div>
+                <h1>Velocity Burst</h1>
+                <div class="stats-box">
+                    <div class="label">Score</div>
+                    <div id="score" class="value">00000</div>
+                </div>
+                <div class="stats-box">
+                    <div class="label">Lines</div>
+                    <div id="lines" class="value">0</div>
+                </div>
+                <div class="stats-box">
+                    <div class="label">Next</div>
+                    <div class="next-piece-preview">
+                        <canvas id="next-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="stats-box">
+                    <div class="label">Speed</div>
+                    <div id="speed" class="value">1x</div>
+                </div>
+            </div>
+
+            <div class="controls-hint">
+                <p>← → : Move</p>
+                <p>↑ : Rotate</p>
+                <p>↓ : Soft Drop</p>
+                <p>SPACE : Hard Drop</p>
+            </div>
+        </div>
+
+        <div id="game-over" class="game-over-overlay">
+            <h2 style="font-size: 3rem; margin-bottom: 0.5rem;">GAME OVER</h2>
+            <p id="final-score" style="font-size: 1.2rem; color: var(--accent-color);">Final Score: 0</p>
+            <button class="btn-restart" onclick="resetGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
