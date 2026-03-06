@@ -58,7 +58,11 @@ let particles = [];
 let flashRows = [];
 let shakeIntensity = 0;
 let demoniacMode = false;
+let distortedMode = false;
 const gameContainer = document.getElementById('game-container');
+const hintUp = document.getElementById('hint-up');
+const hintDown = document.getElementById('hint-down');
+const hintSpace = document.getElementById('hint-space');
 
 class Piece {
     constructor(type) {
@@ -236,12 +240,15 @@ function clearLines() {
         flashRows = rowsToFlash;
 
         // Effects
+        let baseScore = 0;
         if (linesInThisClear === 4) {
             shakeIntensity = 15;
-            score += 800;
+            baseScore = 800;
         } else {
-            score += [0, 100, 300, 500][linesInThisClear];
+            baseScore = [0, 100, 300, 500][linesInThisClear];
         }
+
+        score += distortedMode ? baseScore * 2 : baseScore;
 
         linesCleared += linesInThisClear;
 
@@ -353,8 +360,10 @@ function resetGame() {
     nextPiece = randomPiece();
     dropInterval = 1000;
     demoniacMode = false;
-    gameContainer.classList.remove('demoniac');
+    distortedMode = false;
+    gameContainer.classList.remove('demoniac', 'distorted');
     updateStats();
+    updateHints();
     gameOverOverlay.style.display = 'none';
     lastTime = performance.now();
     update();
@@ -386,6 +395,29 @@ function toggleDemoniac() {
         shakeTarget.style.transform = 'translate(0, 0)';
     }
     updateStats();
+}
+
+function toggleDistorted() {
+    distortedMode = !distortedMode;
+    if (distortedMode) {
+        gameContainer.classList.add('distorted');
+    } else {
+        gameContainer.classList.remove('distorted');
+    }
+    updateHints();
+    updateStats();
+}
+
+function updateHints() {
+    if (distortedMode) {
+        hintUp.innerText = "↑ : Soft Drop";
+        hintDown.innerText = "↓ : Rotate";
+        hintSpace.innerText = "SPACE : Demoniac Mode";
+    } else {
+        hintUp.innerText = "↑ : Rotate";
+        hintDown.innerText = "↓ : Soft Drop";
+        hintSpace.innerText = "SPACE : Hard Drop";
+    }
 }
 
 function handleScaling() {
@@ -422,18 +454,40 @@ window.addEventListener('keydown', event => {
         event.preventDefault();
     }
 
-    if (event.code === 'ArrowLeft') {
-        if (!collide(currentPiece, board, -1, 0)) currentPiece.x--;
-    } else if (event.code === 'ArrowRight') {
-        if (!collide(currentPiece, board, 1, 0)) currentPiece.x++;
-    } else if (event.code === 'ArrowDown') {
-        drop();
-    } else if (event.code === 'ArrowUp') {
-        rotatePiece();
-    } else if (event.code === 'Space') {
-        hardDrop();
-    } else if (event.code === 'KeyA') {
-        toggleDemoniac();
+    // Swapped Logic for Distorted Mode
+    if (distortedMode) {
+        if (event.code === 'ArrowUp') {
+            drop();
+        } else if (event.code === 'ArrowDown') {
+            rotatePiece();
+        } else if (event.code === 'Space') {
+            toggleDemoniac();
+        } else if (event.code === 'KeyD') {
+            toggleDistorted();
+        } else if (event.code === 'ArrowLeft') {
+            if (!collide(currentPiece, board, -1, 0)) currentPiece.x--;
+        } else if (event.code === 'ArrowRight') {
+            if (!collide(currentPiece, board, 1, 0)) currentPiece.x++;
+        } else if (event.code === 'KeyA') {
+            hardDrop();
+        }
+    } else {
+        // Normal Logic
+        if (event.code === 'ArrowLeft') {
+            if (!collide(currentPiece, board, -1, 0)) currentPiece.x--;
+        } else if (event.code === 'ArrowRight') {
+            if (!collide(currentPiece, board, 1, 0)) currentPiece.x++;
+        } else if (event.code === 'ArrowDown') {
+            drop();
+        } else if (event.code === 'ArrowUp') {
+            rotatePiece();
+        } else if (event.code === 'Space') {
+            hardDrop();
+        } else if (event.code === 'KeyA') {
+            toggleDemoniac();
+        } else if (event.code === 'KeyD') {
+            toggleDistorted();
+        }
     }
 });
 
