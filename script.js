@@ -57,6 +57,8 @@ let lastTime = 0;
 let particles = [];
 let flashRows = [];
 let shakeIntensity = 0;
+let demoniacMode = false;
+const gameContainer = document.getElementById('game-container');
 
 class Piece {
     constructor(type) {
@@ -167,12 +169,13 @@ function draw() {
     });
 
     // Handle Shake
-    if (shakeIntensity > 0) {
-        const sx = (Math.random() - 0.5) * shakeIntensity;
-        const sy = (Math.random() - 0.5) * shakeIntensity;
+    const currentShake = demoniacMode ? shakeIntensity + 10 : shakeIntensity;
+    if (currentShake > 0) {
+        const sx = (Math.random() - 0.5) * currentShake;
+        const sy = (Math.random() - 0.5) * currentShake;
         shakeTarget.style.transform = `translate(${sx}px, ${sy}px)`;
         shakeIntensity *= 0.9;
-        if (shakeIntensity < 0.5) {
+        if (shakeIntensity < 0.5 && !demoniacMode) {
             shakeIntensity = 0;
             shakeTarget.style.transform = 'translate(0, 0)';
         }
@@ -270,10 +273,15 @@ function updateStats() {
     scoreElement.innerText = score.toString().padStart(5, '0');
     linesElement.innerText = linesCleared;
 
-    // Exponential speed increase: Interval = Initial * (0.9)^lines
-    dropInterval = Math.max(50, 1000 * Math.pow(0.9, linesCleared));
-    const speedMult = (1000 / dropInterval).toFixed(1);
-    speedElement.innerText = speedMult + 'x';
+    if (demoniacMode) {
+        dropInterval = 100; // 10x faster
+        speedElement.innerText = 'DEMONIC';
+    } else {
+        // Exponential speed increase: Interval = Initial * (0.9)^lines
+        dropInterval = Math.max(50, 1000 * Math.pow(0.9, linesCleared));
+        const speedMult = (1000 / dropInterval).toFixed(1);
+        speedElement.innerText = speedMult + 'x';
+    }
 
     drawNextPiece();
 }
@@ -344,6 +352,8 @@ function resetGame() {
     currentPiece = randomPiece();
     nextPiece = randomPiece();
     dropInterval = 1000;
+    demoniacMode = false;
+    gameContainer.classList.remove('demoniac');
     updateStats();
     gameOverOverlay.style.display = 'none';
     lastTime = performance.now();
@@ -365,8 +375,52 @@ function update(time = 0) {
     }
 }
 
+function toggleDemoniac() {
+    demoniacMode = !demoniacMode;
+    if (demoniacMode) {
+        gameContainer.classList.add('demoniac');
+        shakeIntensity = 20;
+    } else {
+        gameContainer.classList.remove('demoniac');
+        shakeIntensity = 0;
+        shakeTarget.style.transform = 'translate(0, 0)';
+    }
+    updateStats();
+}
+
+function handleScaling() {
+    // Reset to get natural dimensions
+    gameContainer.style.transform = 'scale(1)';
+
+    const containerRect = gameContainer.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Increased padding to 60px to ensure taskbar doesn't clip the bottom
+    const padding = 60;
+    const scaleX = (viewportWidth - padding) / containerRect.width;
+    const scaleY = (viewportHeight - padding) / containerRect.height;
+
+    // Choose the most restrictive scale but don't upscale beyond 1.0
+    const scale = Math.min(1, scaleX, scaleY);
+
+    gameContainer.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', handleScaling);
+// Observe size changes to keep scaling accurate
+if (window.ResizeObserver) {
+    new ResizeObserver(handleScaling).observe(gameContainer);
+}
+setTimeout(handleScaling, 100);
+
 window.addEventListener('keydown', event => {
     if (gameOver) return;
+
+    // Prevent default scroll behavior for game keys
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) {
+        event.preventDefault();
+    }
 
     if (event.code === 'ArrowLeft') {
         if (!collide(currentPiece, board, -1, 0)) currentPiece.x--;
@@ -378,6 +432,8 @@ window.addEventListener('keydown', event => {
         rotatePiece();
     } else if (event.code === 'Space') {
         hardDrop();
+    } else if (event.code === 'KeyA') {
+        toggleDemoniac();
     }
 });
 
